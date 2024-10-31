@@ -1,8 +1,7 @@
-const { JSONParser } = require('formidable/parsers');
 const fs = require('fs');
 const path = require('path');
 
-const  filePath = path('./data/tasks.json');
+const  filePath = './data/tasks.json';
 
 exports.writeTasksToFile =  (task) => {
 
@@ -11,7 +10,7 @@ exports.writeTasksToFile =  (task) => {
 
 exports.readTasksFromFile = () => {
     if(!fs.existsSync(filePath)){
-        writeTasksToFile([]);
+        this.writeTasksToFile([]);
     }
 
     const data = fs.readFileSync(filePath);

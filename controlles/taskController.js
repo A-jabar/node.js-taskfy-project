@@ -51,8 +51,23 @@ exports.updateTask = (req , res) => {
     }))
 }
 
-exports.deleteTask = (req , res) =>{
-    res.end(JSON.stringify({
-        message : 'not implemented yet'
-    }))
-}
+exports.deleteTask = (req, res) => {
+    const taskId = parseInt(req.url.split('/').pop());
+
+    let tasks = readTasksFromFile();
+
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+
+    if (taskIndex === -1) {
+        res.writeHead(404, {'content-type': 'application/json'});
+        res.end(JSON.stringify({ message: 'Task not found' }));
+        return;
+    }
+
+    tasks.splice(taskIndex, 1);
+
+    writeTasksToFile(tasks);
+
+    res.writeHead(200, {'content-type': 'application/json'});
+    res.end(JSON.stringify({ message: 'Task deleted successfully' }));
+} 

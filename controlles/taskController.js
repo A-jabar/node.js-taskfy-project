@@ -24,8 +24,13 @@ exports.createTask = (req ,res) =>{
         const image  = files.image[0];
 
         let task = readTasksFromFile();
+
+        let lastId = 0;
+       
+        lastId = task.length > 0 ? Math.max(...task.map(task => task.id)) + 1 : 1;
+        
         const newTask = {
-            id:  task.length + 1 ,
+            id: lastId  ,
 
             title: fields.title,
             description: fields?.description ||  '',
@@ -45,11 +50,52 @@ exports.createTask = (req ,res) =>{
 
 }
 
-exports.updateTask = (req , res) => {
-    res.end(JSON.stringify({
-        message : 'not implemented yet'
-    }))
-}
+
+    exports.updateTask = (req, res) => {
+        const taskId = parseInt(req.url.split('/').pop());
+        
+        const tasks = readTasksFromFile();
+        
+        const taskIndex = tasks.findIndex(task => task.id === taskId);
+        
+        if (taskIndex === -1) {
+            res.writeHead(404, { 'content-type': 'application/json' });
+            res.end(JSON.stringify({ message: "Task not found" }));
+            return;
+        }
+    
+        const form = new IncomingForm();
+        
+        form.parse(req, (err, fields, files) => {
+            if (err) {
+                res.writeHead(400, { 'content-type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Error parsing form' }));
+                return;
+            }
+    
+            const updatedTask = {
+                id:taskId,
+                title: fields.title || tasks[taskIndex].title, 
+                description: fields.description || tasks[taskIndex].description,
+                status: fields.status || tasks[taskIndex].status, 
+                image: files.image ? `/uploads/${files.image[0].originalFilename}` : tasks[taskIndex].image
+            };
+    
+            tasks[taskIndex] = updatedTask;
+            
+            writeTasksToFile(tasks);
+    
+            if (files.image) {
+                const image = files.image[0];
+                copyFileSync(image.filepath, path.join(__dirname, '../uploads', image.originalFilename));
+            }
+    
+            res.writeHead(200, { 'content-type': 'application/json' });
+            res.end(JSON.stringify(updatedTask));
+        });
+    }
+    
+
 
 exports.deleteTask = (req, res) => {
     const taskId = parseInt(req.url.split('/').pop());
